@@ -1,6 +1,10 @@
+const express = require('express');
+const app = express();
 const responses = require('../responses.json');
 
-module.exports = async (req, res) => {
+app.use(express.json());
+
+app.post('/api/chat', (req, res) => {
   try {
     const { message } = req.body;
     
@@ -27,4 +31,6 @@ module.exports = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
-};
+});
+
+module.exports = app;
