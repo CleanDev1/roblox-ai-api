@@ -1,0 +1,6 @@
+{
+  "greetings": ["Hello!", "Hi there!", "Greetings!"],
+  "questions": ["I'm learning!", "That's interesting!", "Tell me more!"],
+  "compliments": ["You're kind!", "Great question!", "I like talking to you!"],
+  "default": ["I'm a simple AI", "Try asking differently", "What else?"]
+}
