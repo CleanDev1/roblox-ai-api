@@ -34,3 +34,7 @@ app.post('/api/chat', (req, res) => {
 });
 
 module.exports = app;
+// Add this to `api/chat.js` (temporary test route)
+app.get('/api/chat', (req, res) => {
+  res.json({ response: "API is working!", model: "test" });
+});
