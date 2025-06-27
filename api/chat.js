@@ -2,8 +2,24 @@ const express = require('express');
 const app = express();
 const responses = require('../responses.json');
 
+// Enable CORS and JSON parsing
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+  next();
+});
 app.use(express.json());
 
+// GET endpoint for browser testing
+app.get('/api/chat', (req, res) => {
+  res.json({ 
+    status: 'API is working!',
+    usage: 'Send POST requests to this endpoint',
+    model: "github-ai-v1"
+  });
+});
+
+// POST endpoint for Roblox
 app.post('/api/chat', (req, res) => {
   try {
     const { message } = req.body;
@@ -15,14 +31,10 @@ app.post('/api/chat', (req, res) => {
     else if (/\?$/.test(message)) {
       response = responses.questions[Math.floor(Math.random() * responses.questions.length)];
     }
-    else if (/nice|good|great|awesome/i.test(message)) {
-      response = responses.compliments[Math.floor(Math.random() * responses.compliments.length)];
-    }
     else {
       response = responses.default[Math.floor(Math.random() * responses.default.length)];
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.json({
       response: response,
       model: "github-ai-v1",
@@ -34,7 +46,3 @@ app.post('/api/chat', (req, res) => {
 });
 
 module.exports = app;
-// Add this to `api/chat.js` (temporary test route)
-app.get('/api/chat', (req, res) => {
-  res.json({ response: "API is working!", model: "test" });
-});
