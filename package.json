@@ -1,7 +1,7 @@
 {
   "name": "roblox-ai-api",
   "version": "1.0.0",
-  "description": "Simple AI API for Roblox",
+  "main": "api/chat.js",
   "scripts": {
     "start": "node api/chat.js"
   },
