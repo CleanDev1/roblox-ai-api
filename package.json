@@ -1,19 +1,35 @@
 {
   "name": "roblox-ai-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Roblox AI Assistant using Google Gemini API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "@google/generative-ai": "^0.1.0",
+    "@google/generative-ai": "^0.4.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
     "express-rate-limit": "^7.1.0",
     "ssl-root-cas": "^1.3.1"
   },
   "engines": {
-    "node": ">=18.x"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "roblox",
+    "gemini",
+    "ai",
+    "api"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CleanDev1/roblox-ai-api.git"
   }
 }
