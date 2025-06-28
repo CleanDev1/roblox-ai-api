@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Initialize Gemini
+// Initialize Gemini with free-tier model
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Middleware
@@ -29,7 +29,7 @@ app.get('/health', (req, res) => {
   res.status(200).type('text').send('OK');
 });
 
-// AI endpoint
+// AI endpoint - now using gemini-1.0-pro
 app.post('/', async (req, res) => {
   try {
     // Validate input
@@ -40,9 +40,9 @@ app.post('/', async (req, res) => {
       });
     }
 
-    // Get the model
+    // Get the model (using free-tier model)
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro-latest",
+      model: "gemini-1.0-pro", // Free and accessible model
       systemInstruction: "You are a helpful AI assistant specialized in Roblox game development. " +
                        "Provide clear, concise answers with Lua code examples when possible. " +
                        "Keep responses under 200 words."
@@ -63,7 +63,7 @@ app.post('/', async (req, res) => {
     // Send successful response
     res.json({
       response: text,
-      model: "gemini-1.5-pro-latest",
+      model: "gemini-1.0-pro",
       timestamp: new Date().toISOString()
     });
 
@@ -85,48 +85,24 @@ app.get('/', (req, res) => {
     <head>
       <title>Roblox AI Assistant (Gemini)</title>
       <style>
-        body {
-          font-family: Arial, sans-serif;
-          line-height: 1.6;
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 20px;
-          color: #333;
-        }
-        code {
-          background: #f4f4f4;
-          padding: 2px 5px;
-          border-radius: 3px;
-        }
-        pre {
-          background: #f8f8f8;
-          padding: 15px;
-          border-radius: 5px;
-          overflow-x: auto;
-        }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+        pre { background: #f8f8f8; padding: 15px; border-radius: 5px; overflow-x: auto; }
       </style>
     </head>
     <body>
       <h1>🤖 Roblox AI Assistant API</h1>
-      <p>This API provides AI-powered assistance for Roblox development using Google Gemini.</p>
+      <p>Using <strong>gemini-1.0-pro</strong> (free tier model)</p>
       
       <h2>How to Use</h2>
-      <p>Send POST requests to <code>/</code> with:</p>
       <pre>{
-  "prompt": "Your question about Roblox development"
+  "prompt": "Your Roblox question"
 }</pre>
       
-      <h2>Example Request</h2>
-      <pre>curl -X POST https://roblox-ai-api-pi.vercel.app/ \\
+      <h2>Example</h2>
+      <pre>curl -X POST https://your-vercel-url.vercel.app/ \\
   -H "Content-Type: application/json" \\
-  -d '{"prompt":"How do I make a part change color?"}'</pre>
-      
-      <h2>Response Format</h2>
-      <pre>{
-  "response": "Use script.Parent.Color = Color3.new(1,0,0)",
-  "model": "gemini-1.5-pro-latest",
-  "timestamp": "2024-03-15T12:00:00.000Z"
-}</pre>
+  -d '{"prompt":"How make part spin?"}'</pre>
       
       <p>Check <a href="/health">/health</a> for API status</p>
     </body>
@@ -137,9 +113,8 @@ app.get('/', (req, res) => {
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-  🚀 Roblox AI Assistant Online
-  ► Port: ${PORT}
-  ► Model: gemini-1.5-pro-latest
-  ► Ready to help with Roblox development!
+  🚀 Server running on port ${PORT}
+  ► Model: gemini-1.0-pro (free tier)
+  ► Ready for Roblox assistance!
   `);
 });
