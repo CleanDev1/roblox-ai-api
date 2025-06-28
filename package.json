@@ -7,7 +7,7 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.3.1",  // Latest confirmed working version
+    "@google/generative-ai": "^0.3.1",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
