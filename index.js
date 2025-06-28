@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Initialize Gemini
+// Initialize Gemini with the correct model
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Middleware
@@ -16,7 +16,7 @@ app.use(express.json({ limit: '10kb' }));
 
 // Rate limiting (60 requests per minute)
 const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 60,
   message: JSON.stringify({
     error: "Rate limit exceeded",
@@ -29,7 +29,7 @@ app.use(limiter);
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: "OK",
-    model: "gemini-1.0-pro",
+    model: "gemini-1.5-flash",  // Updated model name
     timestamp: new Date().toISOString()
   });
 });
@@ -50,6 +50,7 @@ app.get('/', (req, res) => {
     <body>
       <h1>🤖 Roblox AI Assistant API</h1>
       <p>This API is running and ready to process requests.</p>
+      <p>Using <strong>Gemini 1.5 Flash</strong> model</p>
       <p>Use POST <code>/api/chat</code> to ask questions about Roblox development.</p>
       <p>Check <a href="/health">/health</a> for system status.</p>
     </body>
@@ -57,7 +58,7 @@ app.get('/', (req, res) => {
   `);
 });
 
-// AI endpoint
+// AI endpoint - CRITICAL FIX
 app.post('/api/chat', async (req, res) => {
   try {
     // Validate input
@@ -68,14 +69,13 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Get the model (with fallback)
-    let model;
-    try {
-      model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
-    } catch (modelError) {
-      console.warn('Falling back to gemini-pro model');
-      model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    }
+    // Use the currently available model
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",  // CORRECT MODEL NAME
+      generationConfig: {
+        maxOutputTokens: 500
+      }
+    });
 
     // Generate response
     const result = await model.generateContent(req.body.prompt);
@@ -85,16 +85,25 @@ app.post('/api/chat', async (req, res) => {
     // Send successful response
     res.json({
       response: text,
-      model: model.model,
+      model: "gemini-1.5-flash",
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('AI Error:', error);
+    
+    // More helpful error messages
+    let details = error.message;
+    if (error.message.includes('API key')) {
+      details = "Invalid or missing Gemini API key";
+    } else if (error.message.includes('model')) {
+      details = "Model configuration error - check model name";
+    }
+    
     res.status(500).json({
       error: "AI service unavailable",
-      details: error.message,
-      help: "Check your Gemini API key and quota at https://aistudio.google.com/app/apikey"
+      details: details,
+      help: "Check your Gemini API key at https://aistudio.google.com/app/apikey"
     });
   }
 });
@@ -104,7 +113,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`
   🚀 Roblox AI Assistant Online
   ► Port: ${PORT}
-  ► Model: gemini-1.0-pro (with fallback)
+  ► Model: gemini-1.5-flash
   ► Rate Limit: 60 requests/minute
   ► Ready to help with Roblox development!
   `);
