@@ -1,4 +1,4 @@
-# Environment files (never commit these!)
+# Environment files
 .env
 .env.local
 
