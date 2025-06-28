@@ -1,123 +1,63 @@
-require('ssl-root-cas').inject(); // Fix SSL issues
+require('ssl-root-cas').inject();
 const express = require('express');
-const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ===== Vercel Configuration ===== //
-app.set('trust proxy', true);
-app.disable('x-powered-by');
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// ===== Middleware ===== //
-app.use(cors({
-  origin: '*',
-  methods: ['POST', 'GET']
-}));
-
+// Middleware
+app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10kb' }));
 
-// Rate limiting (100 requests per 15 minutes)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests, please try again later.'
-});
-app.use(limiter);
-
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-// ===== Routes ===== //
+// Rate limiting
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.status(200).type('text').send('OK');
-});
+app.get('/health', (req, res) => res.status(200).send('OK'));
 
 // AI endpoint
 app.post('/', async (req, res) => {
   try {
-    // Validate input
-    if (!req.body.prompt || typeof req.body.prompt !== 'string') {
-      return res.status(400).json({ error: 'Please provide a valid prompt' });
+    if (!req.body.prompt) {
+      return res.status(400).json({ error: 'Please provide a prompt' });
     }
 
-    // Generate helpful response with ChatGPT
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful, kind and patient AI assistant. " +
-                   "Provide clear, concise answers to questions. " +
-                   "Be supportive and encouraging. " +
-                   "Keep responses under 200 characters."
-        },
-        {
-          role: "user",
-          content: req.body.prompt.trim()
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 150
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: "You are a helpful AI assistant specialized in Roblox game development. Provide clear, concise answers with code examples when possible."
     });
 
-    const response = completion.choices[0].message.content;
-    
+    const result = await model.generateContent(req.body.prompt);
+    const response = await result.response.text();
+
     res.json({
       response: response,
-      model: "gpt-3.5-turbo",
+      model: "gemini-pro",
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('AI Error:', error);
+    console.error('Gemini Error:', error);
     res.status(500).json({ 
-      error: "I'm having trouble thinking right now",
+      error: "AI service unavailable",
       details: error.message 
     });
   }
 });
 
-// Root endpoint - documentation
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Helpful AI Assistant</title>
-      <style>
-        body { font-family: sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
-        code { background: #f0f0f0; padding: 2px 4px; border-radius: 4px; }
-        pre { background: #f8f8f8; padding: 1rem; border-radius: 4px; }
-      </style>
-    </head>
+// Root endpoint
+app.get('/', (req, res) => res.send(`
+  <html>
     <body>
-      <h1>🤖 Helpful AI Assistant API</h1>
-      <p>Send POST requests to <code>/</code> with:</p>
-      <pre>{
-  "prompt": "your question or message"
-}</pre>
-      <p>Get kind, helpful responses in return!</p>
-      <h2>Example Curl Command:</h2>
-      <pre>curl -X POST https://your-vercel-app.vercel.app/ \\
-  -H "Content-Type: application/json" \\
-  -d '{"prompt":"How do I make a sandwich?"}'</pre>
+      <h1>Roblox AI Assistant (Gemini)</h1>
+      <p>Send POST requests to / with JSON body: {"prompt":"your question"}</p>
     </body>
-    </html>
-  `);
-});
+  </html>
+`));
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`
-  🚀 Helpful AI Assistant Online
-  ► Port: ${PORT}
-  ► Ready to assist...
-  `);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
